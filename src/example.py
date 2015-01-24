@@ -26,7 +26,6 @@ def process_test_data(params, estimator, x_test_index, x_test):
 
 
 def main():
-    # 1. Generate data
     print 'Running', __file__, '...'
 
     params =    {
@@ -37,14 +36,15 @@ def main():
                 'TrainSize'             : .9
                 }
 
+    # 1. Generate data
     df = dataset.load_train_data(params)
     train_data = df.values
     
-    # Start in the PClass column, we will not be using the passengerid
+    # Skip the passengerid
     X_train = train_data[:,2:]
     Y_train = train_data[:,0].astype(int)
     
-    # Partition training data
+    # 2. Partition training data
     trainSize = int(params['TrainSize'] * np.size(Y_train))
     x_train, x_valid = X_train[:trainSize, :], X_train[trainSize:,:]
     y_train, y_valid = Y_train[:trainSize], Y_train[trainSize:]
@@ -72,7 +72,7 @@ def main():
                       training_algorithm = [N.TRAIN_RPROP],
                       show              = [500])
     
-    
+    # 3. Search for the best estimator
     cv_ = cv.StratifiedShuffleSplit(y_train, n_iter=params['n_fold'], train_size=params['TrainSize'], random_state=rng)
     
     grid = grid_search.GridSearchCV(classifier, param_grid=param_grid, cv=cv_)
@@ -92,6 +92,7 @@ def main():
         np.sqrt(metrics.mean_squared_error(y_valid, y_valid_pred)))
 
 
+    # 4. Run found estimator on the test data.
     print 'Analyzing test data ', params['Model'], 'datapoints=', x_test.shape[0], 'features=',x_test.shape[1]
     process_test_data(params, best_estimator, x_test_index, x_test)
 
